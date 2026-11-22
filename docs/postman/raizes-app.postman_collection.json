@@ -1,0 +1,254 @@
+{
+  "info": {
+    "name": "Raizes do Nordeste - Backend",
+    "description": "Colecao de testes dos endpoints do backend do estudo de caso Raizes do Nordeste (Projeto Multidisciplinar - trilha Back-end).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "unidadeId", "value": "1" },
+    { "key": "clienteId", "value": "1" },
+    { "key": "produtoId", "value": "1" },
+    { "key": "pedidoId", "value": "1" },
+    { "key": "gatewayTransacaoId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Cardapio",
+      "item": [
+        {
+          "name": "Consultar cardapio da unidade",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/unidades/{{unidadeId}}/cardapio",
+              "host": ["{{baseUrl}}"],
+              "path": ["unidades", "{{unidadeId}}", "cardapio"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pedidos",
+      "item": [
+        {
+          "name": "Criar pedido (sucesso)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos",
+              "host": ["{{baseUrl}}"],
+              "path": ["pedidos"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidadeId\": {{unidadeId}},\n  \"clienteId\": {{clienteId}},\n  \"canal\": \"APP\",\n  \"itens\": [\n    { \"produtoId\": {{produtoId}}, \"quantidade\": 2 }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Criar pedido - unidade inexistente (erro 404)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos",
+              "host": ["{{baseUrl}}"],
+              "path": ["pedidos"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidadeId\": 9999,\n  \"clienteId\": null,\n  \"canal\": \"APP\",\n  \"itens\": [\n    { \"produtoId\": {{produtoId}}, \"quantidade\": 1 }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Criar pedido - estoque insuficiente (erro 422)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos",
+              "host": ["{{baseUrl}}"],
+              "path": ["pedidos"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidadeId\": {{unidadeId}},\n  \"clienteId\": null,\n  \"canal\": \"APP\",\n  \"itens\": [\n    { \"produtoId\": {{produtoId}}, \"quantidade\": 99999 }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Consultar status do pedido",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["pedidos", "{{pedidoId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Cancelar pedido",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/cancelar",
+              "host": ["{{baseUrl}}"],
+              "path": ["pedidos", "{{pedidoId}}", "cancelar"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Cliente desistiu\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pagamentos",
+      "item": [
+        {
+          "name": "Solicitar pagamento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('gatewayTransacaoId', json.gatewayTransacaoId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/{{pedidoId}}/solicitar",
+              "host": ["{{baseUrl}}"],
+              "path": ["pagamentos", "{{pedidoId}}", "solicitar"]
+            }
+          }
+        },
+        {
+          "name": "Webhook - pagamento confirmado",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["pagamentos", "webhook"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedidoId\": {{pedidoId}},\n  \"gatewayTransacaoId\": \"{{gatewayTransacaoId}}\",\n  \"status\": \"CONFIRMADO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Webhook - pagamento negado",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["pagamentos", "webhook"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedidoId\": {{pedidoId}},\n  \"gatewayTransacaoId\": \"{{gatewayTransacaoId}}\",\n  \"status\": \"NEGADO\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fidelidade e LGPD",
+      "item": [
+        {
+          "name": "Registrar consentimento (fidelizacao)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/fidelidade/consentimento",
+              "host": ["{{baseUrl}}"],
+              "path": ["fidelidade", "consentimento"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": {{clienteId}},\n  \"finalidade\": \"FIDELIZACAO\",\n  \"aceito\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Anonimizar dados do cliente (direito LGPD)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/fidelidade/clientes/{{clienteId}}/dados?motivo=Solicitacao do titular",
+              "host": ["{{baseUrl}}"],
+              "path": ["fidelidade", "clientes", "{{clienteId}}", "dados"],
+              "query": [{ "key": "motivo", "value": "Solicitacao do titular" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Relatorios",
+      "item": [
+        {
+          "name": "Relatorio de vendas consolidado",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/relatorios/vendas?inicio=2026-11-01T00:00:00&fim=2026-11-30T23:59:59",
+              "host": ["{{baseUrl}}"],
+              "path": ["relatorios", "vendas"],
+              "query": [
+                { "key": "inicio", "value": "2026-11-01T00:00:00" },
+                { "key": "fim", "value": "2026-11-30T23:59:59" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auditoria",
+      "item": [
+        {
+          "name": "Listar cancelamentos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/auditoria/operacoes?tipo=CANCELAMENTO",
+              "host": ["{{baseUrl}}"],
+              "path": ["auditoria", "operacoes"],
+              "query": [{ "key": "tipo", "value": "CANCELAMENTO" }]
+            }
+          }
+        },
+        {
+          "name": "Listar acessos a dados pessoais",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/auditoria/operacoes?tipo=ACESSO_DADOS_PESSOAIS",
+              "host": ["{{baseUrl}}"],
+              "path": ["auditoria", "operacoes"],
+              "query": [{ "key": "tipo", "value": "ACESSO_DADOS_PESSOAIS" }]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
