@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: raizes-do-nordeste-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/raizes_nordeste
+    username: raizes_app
+    password: raizes_app
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+gateway-pagamento:
+  base-url: http://localhost:8080/mock-gateway
+  timeout-ms: 5000
+
+logging:
+  level:
+    com.raizesdonordeste: INFO
